@@ -27,3 +27,9 @@ client/dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Word temporary/lock files
+~$*
+
+# Prompts folder
+Prompts/
