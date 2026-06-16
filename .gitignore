@@ -1,0 +1,29 @@
+# Local database files containing sensitive email signups
+server/data/
+*.json
+!package.json
+!package-lock.json
+!server/package.json
+!client/package.json
+!client/package-lock.json
+!server/questions.json
+
+# Node modules
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Local environment variables
+.env
+.env.local
+.env.production
+.env.development
+
+# Build outputs
+dist/
+client/dist/
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
