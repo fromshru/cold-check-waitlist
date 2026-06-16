@@ -106,7 +106,7 @@ module.exports = async function handler(req, res) {
     // SECURE LOCAL STORAGE FALLBACK (Local Dev Node Server)
     // ----------------------------------------------------
     try {
-      const DATA_DIR = path.join(process.cwd(), 'server', 'data');
+      const DATA_DIR = path.join(process.cwd(), 'data');
       if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
       }

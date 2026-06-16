@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ColdCheck — One question. Your answer first.</title>
+  <meta name="description" content="ColdCheck drops one hard question each day. Answer blind before you see what your pod thinks. No AI, no algorithms, just honest reasoning.">
+  
+  <!-- SEO Meta Tags -->
+  <meta property="og:title" content="ColdCheck — One question. Your answer first.">
+  <meta property="og:description" content="Answer daily dilemmas blind before seeing your friends' reasoning.">
+  <meta property="og:type" content="website">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <div class="landing-wrapper">
+    <!-- Navigation -->
+    <nav class="landing-nav" id="main-navbar">
+      <div class="landing-logo">
+        Cold<span>Check</span>
+      </div>
+      <div class="landing-nav-right">
+        Coming soon · <span style="color: #5A5A5A; cursor: default;">Sign In</span>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="landing-hero" id="hero-section">
+      <div class="landing-eyebrow">One question. Your answer first.</div>
+      <h1 class="landing-hero-headline text-serif">
+        You are AI's bitch.
+      </h1>
+      <div class="landing-hero-challenge">
+        Prove us wrong.
+      </div>
+      <p class="landing-hero-sub text-muted">
+        ColdCheck sends your pod one question. You answer before you see anyone else's. 
+        No AI. No algorithm. Just you, your reasoning, and three friends who'll push back.
+      </p>
+
+      <!-- Waitlist Signup Container -->
+      <div class="landing-waitlist-form" id="hero-form-container">
+        <input 
+          type="email" 
+          id="hero-email-input" 
+          class="landing-waitlist-input" 
+          placeholder="your@email.com"
+          aria-label="Email Address"
+        />
+        <button id="hero-submit-btn" class="landing-waitlist-btn">Join the waitlist</button>
+      </div>
+      <div id="hero-error-msg" class="landing-error-msg"></div>
+      <p id="hero-form-note" class="landing-form-note">No spam. We'll only email you when it matters.</p>
+
+      <!-- Success State -->
+      <div id="hero-success-msg" class="landing-success-msg">
+        <strong>You're in.</strong> We'll be in touch when your spot opens up.
+        <span style="color: #5A5A5A; font-size: 12px; margin-top: 6px; display: block;">
+          Share with a friend to move up the list.
+        </span>
+      </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="landing-divider"></div>
+
+    <!-- How It Works -->
+    <section class="landing-mechanic" id="how-it-works">
+      <p class="landing-mechanic-label">How it works</p>
+      <div class="landing-steps">
+        <div class="landing-step">
+          <div class="landing-step-num">01</div>
+          <h3 class="landing-step-title">You get the question</h3>
+          <p class="landing-step-desc">
+            One question drops each day. A finance dilemma. A moral puzzle. A call you've been avoiding. Something worth actually thinking about.
+          </p>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-num">02</div>
+          <h3 class="landing-step-title">Answer blind</h3>
+          <p class="landing-step-desc">
+            Write your answer and your reasoning before seeing anyone else's. No previews. No hints. Just your honest take.
+          </p>
+        </div>
+        <div class="landing-step">
+          <div class="landing-step-num">03</div>
+          <h3 class="landing-step-title">The pod reveals</h3>
+          <p class="landing-step-desc">
+            Once everyone answers, the pod unlocks. See everyone's reasoning. React. Push back. See whether your own thinking survives.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section class="landing-why" id="philosophy">
+      <div class="landing-why-inner">
+        <p class="landing-why-quote">
+          "We have AI to answer everything.<br />
+          We have nowhere left to <em>be wrong.</em>"
+        </p>
+        <p class="landing-why-body">
+          ColdCheck is built on the belief that the most useful thing you can do with a hard question 
+          is sit with it yourself first. Your reasoning is the product. Not the answer.
+        </p>
+      </div>
+    </section>
+
+    <!-- Pod Preview -->
+    <section class="landing-pod-preview" id="pod-preview">
+      <p class="landing-pod-label">What a pod looks like</p>
+      <div class="landing-pod-card">
+        <div class="landing-pod-question">
+          Would you rather have $50,000 today, or $5,000 a year for the next 20 years?
+        </div>
+        <div class="landing-pod-answers">
+          
+          <!-- Kavan -->
+          <div class="landing-pod-answer">
+            <div class="landing-pod-avatar" style="background: #C9C2B8; color: #111110;">K</div>
+            <div class="landing-pod-answer-text">
+              <div class="landing-pod-answer-name">Kavan · high confidence</div>
+              <div class="landing-pod-answer-verdict">The $50,000 now</div>
+              <p class="landing-pod-answer-reason">
+                Money today is worth more than money later. If I can't beat a 0% real return by investing $50k over 20 years I have bigger problems than this question.
+              </p>
+              <div class="landing-reaction-tags">
+                <span class="landing-tag active-green">solid reasoning</span>
+                <span class="landing-tag">changed my view</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sujith -->
+          <div class="landing-pod-answer">
+            <div class="landing-pod-avatar" style="background: #7A8B7A; color: #111110;">S</div>
+            <div class="landing-pod-answer-text">
+              <div class="landing-pod-answer-name">Sujith · medium confidence</div>
+              <div class="landing-pod-answer-verdict">The $5,000 a year</div>
+              <p class="landing-pod-answer-reason">
+                Inflation eats lump sums faster than people expect. And I know myself — I'd spend the $50k within two years on nothing memorable.
+              </p>
+              <div class="landing-reaction-tags">
+                <span class="landing-tag active-red">didn't hold up</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smruti -->
+          <div class="landing-pod-answer">
+            <div class="landing-pod-avatar" style="background: #7E99B3; color: #111110;">S</div>
+            <div class="landing-pod-answer-text">
+              <div class="landing-pod-answer-name">Smruti · low confidence</div>
+              <div class="landing-pod-answer-verdict">Depends on my age</div>
+              <p class="landing-pod-answer-reason">
+                Twenty years is a different bet at 25 than at 65.
+              </p>
+              <div class="landing-reaction-tags">
+                <span class="landing-tag">solid reasoning</span>
+                <span class="landing-tag">changed my view</span>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <section class="landing-bottom-cta" id="signup-cta">
+      <h2 class="landing-bottom-hl serif">Your turn to think.</h2>
+      <p class="landing-bottom-sub">Join the waitlist. We'll let you know when ColdCheck is ready.</p>
+
+      <!-- Bottom waitlist form -->
+      <div class="landing-waitlist-form" id="bottom-form-container">
+        <input 
+          type="email" 
+          id="bottom-email-input" 
+          class="landing-waitlist-input" 
+          placeholder="your@email.com"
+          aria-label="Email Address"
+        />
+        <button id="bottom-submit-btn" class="landing-waitlist-btn">Join the waitlist</button>
+      </div>
+      <div id="bottom-error-msg" class="landing-error-msg"></div>
+      <p id="bottom-form-note" class="landing-form-note">No spam. We'll only email you when it matters.</p>
+
+      <!-- Success state -->
+      <div id="bottom-success-msg" class="landing-success-msg">
+        <strong>You're in.</strong> We'll be in touch when your spot opens up.
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+      <div class="landing-footer-logo">ColdCheck</div>
+      <div class="landing-footer-note">
+        © 2026 · Built by a first-time founder who had an opinion
+      </div>
+    </footer>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="/js/main.js"></script>
+</body>
+</html>

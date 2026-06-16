@@ -1,17 +1,12 @@
 # Local database files containing sensitive email signups
-server/data/
+data/
 *.json
 !package.json
 !package-lock.json
-!server/package.json
-!client/package.json
-!client/package-lock.json
-!server/questions.json
+!vercel.json
 
 # Node modules
 node_modules/
-client/node_modules/
-server/node_modules/
 
 # Local environment variables
 .env
@@ -20,8 +15,6 @@ server/node_modules/
 .env.development
 
 # Build outputs
-dist/
-client/dist/
 .vercel/
 
 # OS files
