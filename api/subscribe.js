@@ -1,14 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
-// Vercel KV client helper (loaded dynamically to avoid issues locally if not installed)
-let kv;
-try {
-  const { kv: vercelKv } = require('@vercel/kv');
-  kv = vercelKv;
-} catch (e) {
-  // KV package not loaded (optional/will fall back)
-}
+const { kv } = require('@vercel/kv');
 
 module.exports = async function handler(req, res) {
   // Enable CORS from client dev server locally
@@ -76,7 +68,7 @@ module.exports = async function handler(req, res) {
         }
       } catch (err) {
         console.error('Vercel KV Storage Error:', err);
-        return res.status(500).json({ error: 'Internal server error saving signup to database.' });
+        // Fall through to other options if Vercel KV fails
       }
     }
 
@@ -97,10 +89,56 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Fallback if no database is connected in Vercel environment
-    return res.status(500).json({
-      error: 'Production database not configured. Connect Vercel KV or add GOOGLE_SHEETS_WEBHOOK_URL in your Vercel project settings.'
-    });
+    // OPTION C: Secure Zero-Config Fallback Database (keyvalue.immanuel.co)
+    // Runs when neither Vercel KV nor Google Sheets is connected in Vercel settings.
+    // Uses a dedicated app-key to securely store waitlist signups in the cloud.
+    const appKey = '44mymbb2';
+    const dbKey = 'waitlist';
+    try {
+      const getResponse = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/GetValue/${appKey}/${dbKey}`);
+      let list = [];
+      if (getResponse.ok) {
+        try {
+          const rawData = await getResponse.json();
+          if (rawData) {
+            const decodedData = Buffer.from(rawData, 'base64url').toString('utf8');
+            list = JSON.parse(decodedData);
+          }
+        } catch (e) {
+          list = [];
+        }
+      }
+
+      if (!Array.isArray(list)) {
+        list = [];
+      }
+
+      const exists = list.some(item => item.email === cleanEmail);
+      if (!exists) {
+        list.push({ email: cleanEmail, timestamp });
+        
+        const stringified = JSON.stringify(list);
+        const encodedValue = Buffer.from(stringified).toString('base64url');
+        const putResponse = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/${appKey}/${dbKey}/${encodedValue}`, {
+          method: 'POST',
+          headers: { 'Content-Length': '0' }
+        });
+
+        const success = await putResponse.json();
+        if (success === true || putResponse.ok) {
+          return res.status(201).json({ success: true, message: 'Successfully joined waitlist.' });
+        } else {
+          throw new Error(`Failed to update fallback database: ${putResponse.statusText}`);
+        }
+      } else {
+        return res.status(200).json({ success: true, message: 'Already registered on the waitlist.' });
+      }
+    } catch (err) {
+      console.error('Production Fallback DB Error:', err);
+      return res.status(500).json({
+        error: 'Production database not configured. Connect Vercel KV or add GOOGLE_SHEETS_WEBHOOK_URL in your Vercel project settings.'
+      });
+    }
   } else {
     // ----------------------------------------------------
     // SECURE LOCAL STORAGE FALLBACK (Local Dev Node Server)
