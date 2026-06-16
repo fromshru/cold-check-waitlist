@@ -62,6 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (form.formContainer) form.formContainer.style.display = 'none';
         if (form.note) form.note.style.display = 'none';
         if (form.success) {
+          if (data.message && data.message.includes('Already registered')) {
+            form.success.innerHTML = `<strong>Already registered.</strong> We'll be in touch when your spot opens up.`;
+          } else {
+            if (form.success.id === 'hero-success-msg') {
+              form.success.innerHTML = `<strong>You're in.</strong> We'll be in touch when your spot opens up.
+                <span style="color: #5A5A5A; font-size: 12px; margin-top: 6px; display: block;">
+                  Share with a friend to move up the list.
+                </span>`;
+            } else {
+              form.success.innerHTML = `<strong>You're in.</strong> We'll be in touch when your spot opens up.`;
+            }
+          }
           form.success.style.display = 'block';
         }
       } catch (err) {
