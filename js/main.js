@@ -1,4 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
+  let waitlistCount = 0;
+  const heroCounter = document.getElementById('hero-counter');
+  const bottomCounter = document.getElementById('bottom-counter');
+
+  const updateCounterUI = (count) => {
+    if (count <= 0) return;
+    const countText = `Join ${count.toLocaleString()} thinkers already on the waitlist.`;
+    if (heroCounter) {
+      heroCounter.textContent = countText;
+      heroCounter.style.display = 'block';
+    }
+    if (bottomCounter) {
+      bottomCounter.textContent = countText;
+      bottomCounter.style.display = 'block';
+    }
+  };
+
+  // Fetch count on load
+  fetch('/api/subscribe')
+    .then(r => r.json())
+    .then(data => {
+      if (typeof data.count === 'number') {
+        waitlistCount = data.count;
+        updateCounterUI(waitlistCount);
+      }
+    })
+    .catch(err => console.error('Failed to fetch waitlist count:', err));
+
   // Setup handlers for waitlist forms
   const forms = [
     {
@@ -65,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.message && data.message.includes('Already registered')) {
             form.success.innerHTML = `<strong>Already registered.</strong> We'll be in touch when your spot opens up.`;
           } else {
+            // New signup - increment and update counter
+            waitlistCount += 1;
+            updateCounterUI(waitlistCount);
+
             if (form.success.id === 'hero-success-msg') {
               form.success.innerHTML = `<strong>You're in.</strong> We'll be in touch when your spot opens up.
                 <span style="color: #5A5A5A; font-size: 12px; margin-top: 6px; display: block;">

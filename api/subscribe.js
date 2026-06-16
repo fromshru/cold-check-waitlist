@@ -38,6 +38,55 @@ const httpsFetch = function(url, options = {}) {
   });
 };
 
+// Automated welcome email trigger via Resend API
+async function sendWelcomeEmail(toEmail) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.log('Skipping welcome email: RESEND_API_KEY environment variable not set.');
+    return;
+  }
+
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Cold Check <onboarding@resend.dev>';
+  const subject = 'You’re on the waitlist 🎉';
+  const htmlBody = `
+    <div style="background-color: #111110; color: #FAF6F0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; border-radius: 12px; border: 1px solid rgba(250, 246, 240, 0.08);">
+      <h1 style="font-family: 'DM Serif Display', Georgia, serif; color: #FAF6F0; font-size: 28px; margin-bottom: 20px; font-weight: normal; letter-spacing: -0.3px;">Cold<span style="color: #E8533D;">Check</span></h1>
+      <p style="font-size: 16px; line-height: 1.6; color: #C9C2B8; margin-bottom: 24px;">You are officially on the waitlist.</p>
+      <p style="font-size: 14px; line-height: 1.6; color: #8A8A8A; margin-bottom: 30px;">
+        ColdCheck is built on the belief that the most useful thing you can do with a hard question is sit with it yourself first. One daily dilemma. Your answer first. No AI. No algorithm. Just honest reasoning.
+      </p>
+      <div style="margin-top: 40px; border-top: 1px solid rgba(250, 246, 240, 0.08); padding-top: 20px; font-size: 12px; color: #5A5A5A; text-align: center;">
+        © 2026 ColdCheck. Built for thinkers. Only sent when it matters.
+      </div>
+    </div>
+  `;
+
+  try {
+    const response = await httpsFetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: toEmail,
+        subject: subject,
+        html: htmlBody
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Resend API returned error:', errorText);
+    } else {
+      console.log(`Successfully sent welcome email to ${toEmail}`);
+    }
+  } catch (err) {
+    console.error('Failed to send welcome email via Resend:', err);
+  }
+}
+
 module.exports = async function handler(req, res) {
   // Enable CORS from client dev server locally
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -51,6 +100,56 @@ module.exports = async function handler(req, res) {
   // Handle Options preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Handle GET request to retrieve waitlist count
+  if (req.method === 'GET') {
+    const isVercel = !!process.env.VERCEL;
+    
+    if (isVercel) {
+      // Option A: Vercel KV (Redis)
+      if (process.env.KV_URL && process.env.KV_REST_API_TOKEN) {
+        try {
+          if (kv) {
+            const count = await kv.scard('waitlist:emails');
+            return res.status(200).json({ count });
+          }
+        } catch (err) {
+          console.error('Vercel KV count error:', err);
+        }
+      }
+      
+      // Option C: ExtendsClass JSON Bin Fallback
+      const binId = 'bcffdda';
+      try {
+        const getResponse = await httpsFetch(`https://extendsclass.com/api/json-storage/bin/${binId}`);
+        if (getResponse.ok) {
+          const list = await getResponse.json();
+          if (Array.isArray(list)) {
+            return res.status(200).json({ count: list.length });
+          }
+        }
+      } catch (err) {
+        console.error('ExtendsClass count error:', err);
+      }
+      
+      return res.status(200).json({ count: 0 });
+    } else {
+      // Local development
+      try {
+        const DATA_DIR = path.join(process.cwd(), 'data');
+        const jsonPath = path.join(DATA_DIR, 'waitlist.json');
+        if (fs.existsSync(jsonPath)) {
+          const list = JSON.parse(fs.readFileSync(jsonPath, 'utf8') || '[]');
+          if (Array.isArray(list)) {
+            return res.status(200).json({ count: list.length });
+          }
+        }
+      } catch (err) {
+        console.error('Local count error:', err);
+      }
+      return res.status(200).json({ count: 0 });
+    }
   }
 
   // Only allow POST requests for subscription
@@ -98,6 +197,13 @@ module.exports = async function handler(req, res) {
           // Also append to list for sequential exports/views
           await kv.rpush('waitlist:list', JSON.stringify({ email: cleanEmail, timestamp: timestamp }));
 
+          // Trigger email confirmation asynchronously
+          try {
+            await sendWelcomeEmail(cleanEmail);
+          } catch (emailErr) {
+            console.error('Async welcome email failure (Vercel KV):', emailErr);
+          }
+
           return res.status(201).json({ success: true, message: 'Successfully joined waitlist.' });
         } else {
           return res.status(200).json({ success: true, message: 'Already registered on the waitlist.' });
@@ -118,6 +224,13 @@ module.exports = async function handler(req, res) {
         });
         const data = await response.json();
         if (data.success || response.ok) {
+          // Trigger email confirmation asynchronously
+          try {
+            await sendWelcomeEmail(cleanEmail);
+          } catch (emailErr) {
+            console.error('Async welcome email failure (Sheets Webhook):', emailErr);
+          }
+
           return res.status(201).json({ success: true, message: 'Successfully joined waitlist.' });
         }
       } catch (err) {
@@ -156,6 +269,13 @@ module.exports = async function handler(req, res) {
 
         const resBody = await putResponse.json();
         if (resBody.status === 0 || putResponse.ok) {
+          // Trigger email confirmation asynchronously
+          try {
+            await sendWelcomeEmail(cleanEmail);
+          } catch (emailErr) {
+            console.error('Async welcome email failure (Fallback Bin):', emailErr);
+          }
+
           return res.status(201).json({ success: true, message: 'Successfully joined waitlist.' });
         } else {
           throw new Error(`Failed to update fallback database: status ${putResponse.status}`);
@@ -213,6 +333,13 @@ module.exports = async function handler(req, res) {
 
         const escapedEmail = cleanEmail.replace(/"/g, '""');
         fs.appendFileSync(csvPath, `"${escapedEmail}",${formattedDate}\n`, 'utf8');
+
+        // Trigger email confirmation asynchronously
+        try {
+          await sendWelcomeEmail(cleanEmail);
+        } catch (emailErr) {
+          console.error('Async welcome email failure (Local Dev):', emailErr);
+        }
 
         return res.status(201).json({ success: true, message: 'Successfully joined waitlist.' });
       } else {
