@@ -1,6 +1,42 @@
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const { kv } = require('@vercel/kv');
+
+// Standard Node-native HTTPS fetch implementation for robust runtime compatibility
+const httpsFetch = function(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const isPostOrPut = options.method === 'POST' || options.method === 'PUT';
+    const reqOpts = {
+      hostname: parsed.hostname,
+      port: 443,
+      path: parsed.pathname + parsed.search,
+      method: options.method || 'GET',
+      headers: options.headers || {}
+    };
+    
+    const req = https.request(reqOpts, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        resolve({
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          status: res.statusCode,
+          statusText: res.statusMessage,
+          json: async () => JSON.parse(body),
+          text: async () => body
+        });
+      });
+    });
+    
+    req.on('error', reject);
+    if (isPostOrPut && options.body !== undefined) {
+      req.write(options.body);
+    }
+    req.end();
+  });
+};
 
 module.exports = async function handler(req, res) {
   // Enable CORS from client dev server locally
@@ -75,7 +111,7 @@ module.exports = async function handler(req, res) {
     // OPTION B: Google Sheets integration via simple Apps Script webhook url
     if (process.env.GOOGLE_SHEETS_WEBHOOK_URL) {
       try {
-        const response = await fetch(process.env.GOOGLE_SHEETS_WEBHOOK_URL, {
+        const response = await httpsFetch(process.env.GOOGLE_SHEETS_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: cleanEmail, timestamp: timestamp })
@@ -89,21 +125,16 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // OPTION C: Secure Zero-Config Fallback Database (keyvalue.immanuel.co)
+    // OPTION C: Secure Zero-Config Fallback Database (extendsclass.com JSON Storage)
     // Runs when neither Vercel KV nor Google Sheets is connected in Vercel settings.
-    // Uses a dedicated app-key to securely store waitlist signups in the cloud.
-    const appKey = '44mymbb2';
-    const dbKey = 'waitlist';
+    // Uses an anonymous JSON bin to securely store waitlist signups in the cloud.
+    const binId = 'bcffdda';
     try {
-      const getResponse = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/GetValue/${appKey}/${dbKey}`);
+      const getResponse = await httpsFetch(`https://extendsclass.com/api/json-storage/bin/${binId}`);
       let list = [];
       if (getResponse.ok) {
         try {
-          const rawData = await getResponse.json();
-          if (rawData) {
-            const decodedData = Buffer.from(rawData, 'base64url').toString('utf8');
-            list = JSON.parse(decodedData);
-          }
+          list = await getResponse.json();
         } catch (e) {
           list = [];
         }
@@ -117,18 +148,17 @@ module.exports = async function handler(req, res) {
       if (!exists) {
         list.push({ email: cleanEmail, timestamp });
         
-        const stringified = JSON.stringify(list);
-        const encodedValue = Buffer.from(stringified).toString('base64url');
-        const putResponse = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/${appKey}/${dbKey}/${encodedValue}`, {
-          method: 'POST',
-          headers: { 'Content-Length': '0' }
+        const putResponse = await httpsFetch(`https://extendsclass.com/api/json-storage/bin/${binId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(list)
         });
 
-        const success = await putResponse.json();
-        if (success === true || putResponse.ok) {
+        const resBody = await putResponse.json();
+        if (resBody.status === 0 || putResponse.ok) {
           return res.status(201).json({ success: true, message: 'Successfully joined waitlist.' });
         } else {
-          throw new Error(`Failed to update fallback database: ${putResponse.statusText}`);
+          throw new Error(`Failed to update fallback database: status ${putResponse.status}`);
         }
       } else {
         return res.status(200).json({ success: true, message: 'Already registered on the waitlist.' });
@@ -136,7 +166,7 @@ module.exports = async function handler(req, res) {
     } catch (err) {
       console.error('Production Fallback DB Error:', err);
       return res.status(500).json({
-        error: 'Production database not configured. Connect Vercel KV or add GOOGLE_SHEETS_WEBHOOK_URL in your Vercel project settings.'
+        error: `Production database error: ${err.message || err}`
       });
     }
   } else {
